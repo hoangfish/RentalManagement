@@ -102,7 +102,7 @@ In the next week, the team will move into Sprint 2. The main goals are to collec
 
 - **Assignee:** Lê Đinh Nguyên Phong & Phạm Hoàng Phúc
 - **Created Date:** October 18, 2026
-- **Due Date:** October 25, 2026
+- **Due Date:** November 1, 2026
 - **Last Updated:** October 18, 2026
 - **Task Name:** Design Database ERD (Rooms, Users, Bills)
 
@@ -120,7 +120,7 @@ In the next week, the team will move into Sprint 2. The main goals are to collec
 
 - **Assignee:** Nguyễn Khang Hy & Nguyễn Trực Phúc
 - **Created Date:** October 18, 2026
-- **Due Date:** October 25, 2026
+- **Due Date:** November 1, 2026
 - **Last Updated:** October 18, 2026
 - **Task Name:** Collect Real Data for 50 Rental Rooms in Làng Đại Học
 
