@@ -146,7 +146,7 @@ When using the course's RUP templates (`.dot` and `.docx`) in Microsoft Word, te
 
 **Solution:**
 
-The team agreed to move document editing to Google Docs. This allows members to work together in real time. The documents will then be exported to PDF for submission.
+The team agreed to move document editing to Google Docs. This allows members to work together in real time.
 
 ### Issue 2: Choosing a UI/UX Design Approach
 
