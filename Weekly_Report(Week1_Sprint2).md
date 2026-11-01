@@ -71,15 +71,11 @@ We have a meeting and share our own opinions, then receiving final feedback for 
 
 ## 5. Tasks to do
 
-The team enters Sprint 3 (PA3 — 22/06/2026 onward) with all PA2 deliverables submitted. Several PA3 tasks were pre-assigned during Sprint 2's final scrum meeting but remain incomplete and are the immediate priorities carried into Sprint 3:
+| Sprint Goal                                                                          |          Description                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Draw Use-case model                   | After acknowledging the customers, draw the UML that represent the relationship between each type of                                                                                                                    |
+| Fill the template of Use-case specification                       | All member converted all suggested possible use-cases in this week into the template that TA given.|
+| Create UI for each use-case    | Base on the UI that AI suggested in Sprint 1, our group need to complete the UI for all use-case.                                                                                  |                                                                                                                                       |
 
-- **UC Diagrams (Mermaid)** — for all 14 FGs, distributed across Kiệt, Quý, Dương, and Triết
-- **UC Specifications** — for all 14 FGs, distributed across the same owners
-- **UI Prototypes** (Figma/v0/Bolt) — for all 14 FGs, owned by Quý and Triết
-- **Backend scaffold** — Node.js + Python AI API setup (Kiệt)
-- **Database scaffold** — MongoDB schemas for User, Donation, Campaign, Blood Bag (Dương)
-- **Frontend scaffold** — React + Tailwind CSS project setup (Linh)
-- **Implement FG1.1 User Account Management** — full-stack + Spec Kit (Kiệt, Triết, Dương)
-- **AI Usage Report & Video Demo (FG1, YouTube Unlisted)** — (Kiệt + all members)
+---
 
-A dedicated Sprint 3 Planning Meeting will be held to formally reconfirm scope, priorities, and Jira backlog alignment for these carried-over items before implementation resumes.
