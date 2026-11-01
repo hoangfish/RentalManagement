@@ -62,12 +62,12 @@
 
 The team enters Sprint 3 with all PA2 deliverables submitted. Several PA2 tasks remain incomplete and are the immediate priorities carried into Sprint 3:
 
-| Sprint Goal                                                                          | Description                                                                                                                                                                                                                                |
-| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 
-| AI 3D-generation service and matching approach | Create a 3D-model that simulate the room, and build the matching functions that match the customers' requirements.                                                                                                                                                            |
-| Complete all UX/UI for all core screens | Base on this week UI Prototype file, our group will finish all UX/UI for all functions of the project.                                                                                                                                                                |
-| Code the functions of the project that listed on Jira for Sprint 3 | Our group will start coding next week, build all the functions needed and structured in Github.                                                                                                                                                                      |
+| Sprint Goal                                                                          |          Description                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AI 3D-generation service and matching approach                 | Create a 3D-model that simulate the room, and build the matching functions that match the customers' requirements.                                                                                                                     |
+| Complete all UX/UI for all core screens                      | Base on this week UI Prototype file, our group will finish all UX/UI for all functions of the project.|
+| Code the functions of the project that listed on Jira for Sprint 3   | Our group will start coding next week, build all the functions needed and structured in Github.                                                                                 |        
 <img width="2294" height="306" alt="image" src="https://github.com/user-attachments/assets/b7b4a7a4-86e4-4e8a-8603-879d75bde2c4" />
 
 ---
