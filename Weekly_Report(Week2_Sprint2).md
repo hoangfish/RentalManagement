@@ -23,7 +23,7 @@
 
 ---
 
-## 2. Week Summary
+## 2. Tasks done
 
 | Sprint Goal                                                                          | Status    | Assessment                                                                                                                                                                                                                                |
 | ------------------------------------------------------------------------------------ | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -72,15 +72,12 @@ We have a meeting and share our own opinions, then receiving final feedback for 
 
 ## 5. Tasks to do
 
-The team enters Sprint 3 (PA3 — 22/06/2026 onward) with all PA2 deliverables submitted. Several PA3 tasks were pre-assigned during Sprint 2's final scrum meeting but remain incomplete and are the immediate priorities carried into Sprint 3:
+The team enters Sprint 3 with all PA2 deliverables submitted. Several PA2 tasks remain incomplete and are the immediate priorities carried into Sprint 3:
 
-- **UC Diagrams (Mermaid)** — for all 14 FGs, distributed across Kiệt, Quý, Dương, and Triết
-- **UC Specifications** — for all 14 FGs, distributed across the same owners
-- **UI Prototypes** (Figma/v0/Bolt) — for all 14 FGs, owned by Quý and Triết
-- **Backend scaffold** — Node.js + Python AI API setup (Kiệt)
-- **Database scaffold** — MongoDB schemas for User, Donation, Campaign, Blood Bag (Dương)
-- **Frontend scaffold** — React + Tailwind CSS project setup (Linh)
-- **Implement FG1.1 User Account Management** — full-stack + Spec Kit (Kiệt, Triết, Dương)
-- **AI Usage Report & Video Demo (FG1, YouTube Unlisted)** — (Kiệt + all members)
+| Sprint Goal                                                                          | Description                                                                                                                                                                                                                                |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 
-A dedicated Sprint 3 Planning Meeting will be held to formally reconfirm scope, priorities, and Jira backlog alignment for these carried-over items before implementation resumes.
+| AI 3D-generation service and matching approach | Create a 3D-model that simulate the room, and build the matching functions that match the customers' requirements.                                                                                                                                                            |
+| Complete all UX/UI for all core screens | Base on this week UI Prototype file, our group will finish all UX/UI for the                                                                                                                                                                  |
+| Code the functions of the project that listed on Jira for Sprint 3 | Our group will start coding next week, build all the functions needed and structured in Github.                                                                                                                                                                      |
+
