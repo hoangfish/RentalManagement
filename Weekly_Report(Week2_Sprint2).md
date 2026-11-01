@@ -78,6 +78,7 @@ The team enters Sprint 3 with all PA2 deliverables submitted. Several PA2 tasks 
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 
 | AI 3D-generation service and matching approach | Create a 3D-model that simulate the room, and build the matching functions that match the customers' requirements.                                                                                                                                                            |
-| Complete all UX/UI for all core screens | Base on this week UI Prototype file, our group will finish all UX/UI for the                                                                                                                                                                  |
+| Complete all UX/UI for all core screens | Base on this week UI Prototype file, our group will finish all UX/UI for all functions of the project.                                                                                                                                                                |
 | Code the functions of the project that listed on Jira for Sprint 3 | Our group will start coding next week, build all the functions needed and structured in Github.                                                                                                                                                                      |
 
+---
