@@ -1,5 +1,3 @@
-<img width="2294" height="306" alt="image" src="https://github.com/user-attachments/assets/53280228-9bc1-4bbe-a2af-950751e630b4" /># WEEKLY REPORT — SPRINT 02 - WEEK 2
-
 **26/10/2026 – 01/11/2026**
 
 |**Group Information**||
