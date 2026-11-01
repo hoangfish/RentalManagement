@@ -81,8 +81,7 @@ In next week, our group intend to do some tasks below:
 | Fill the template of Use-case specification                       | All member converted all suggested possible use-cases in this week into the template that TA given.|
 | Create UI for each use-case    | Base on the UI that AI suggested in Sprint 1, our group need to complete the UI for all use-case.                                                                                  |                                                                                                                          
 
-<img width="2298" height="240" alt="image" src="https://github.com/user-attachments/assets/8a3e50c8-b7c5-450f-8ec2-26030083f04c" />
-
+<img width="2290" height="182" alt="image" src="https://github.com/user-attachments/assets/da4e3ae4-4b04-429f-afa6-c0ce7b16c633" />
 
 ---
 
