@@ -32,8 +32,7 @@
 | Collect 50 real room records in the campus area     | Completed | Phong created a survey and collected lots of room information (location, area, price) and customers' needs (type of roommates, location, price).                                                                                     |                                                                                                                                       |
 | Use-case specification | Completed | All members suggested all possible use-cases, then in each use-case, think all problems that can be appeared.                                                                                                                                                                  |
 | Weekly meeting & weekly report| Completed | The meeting hosted by Hoàng Phúc, with no member absence, the weekly report was finally written in MD file by Trực Phúc.                                                                                                                                                                       |
-<img width="2290" height="590" alt="image" src="https://github.com/user-attachments/assets/71b2a1e4-7d35-462b-b724-1ca4465e3605" />
-
+<img width="2304" height="420" alt="image" src="https://github.com/user-attachments/assets/9fdfd9c7-baca-44db-9cff-3b17674e77bb" />
 
 ---
 
