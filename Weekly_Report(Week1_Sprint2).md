@@ -32,6 +32,7 @@
 | Collect 50 real room records in the campus area     | Completed | Phong created a survey and collected lots of room information (location, area, price) and customers' needs (type of roommates, location, price).                                                                                     |                                                                                                                                       |
 | Use-case specification | Completed | All members suggested all possible use-cases, then in each use-case, think all problems that can be appeared.                                                                                                                                                                  |
 | Weekly meeting & weekly report| Completed | The meeting hosted by Hoàng Phúc, with no member absence, the weekly report was finally written in MD file by Trực Phúc.                                                                                                                                                                       |
+<img width="2350" height="1140" alt="image" src="https://github.com/user-attachments/assets/82b439e3-d35f-4e4a-938d-d42644b5ba69" />
 
 ---
 
@@ -78,6 +79,8 @@ In next week, our group intend to do some tasks below:
 | Draw Use-case model                   | After acknowledging the customers, draw the UML that represent the relationship between each type of                                                                                                                    |
 | Fill the template of Use-case specification                       | All member converted all suggested possible use-cases in this week into the template that TA given.|
 | Create UI for each use-case    | Base on the UI that AI suggested in Sprint 1, our group need to complete the UI for all use-case.                                                                                  |                                                                                                                          
+
+<img width="2340" height="876" alt="image" src="https://github.com/user-attachments/assets/3abf02c6-1319-4d9e-9ef3-aea4419e30f6" />
 
 ---
 
