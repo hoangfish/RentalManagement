@@ -33,8 +33,9 @@
 | Use-case specification | Completed | All member converted all suggested possible use-cases in last week into 1.0 version PDF, final documented by Nguyên Phong by 01/11/2026.                                                                                                                                                                  |
 | Create UI for each use-cases | Completed | Trực Phúc asked Gemini for suggestion, then created the UI prototype based on the AI suggestions.                                                                                                                                                                 |
 | Weekly meeting & weekly report| Completed | The meeting hosted by Hoàng Phúc, with no member absence, the weekly report was finally written in MD file by Trực Phúc by 01/11/2026.                                                                                                                                                                       |
-<img width="2278" height="84" alt="image" src="https://github.com/user-attachments/assets/c8fe446f-6d19-4ae6-a98e-10afa53fe2f8" />
-<img width="2286" height="248" alt="image" src="https://github.com/user-attachments/assets/1aaff003-3a48-4562-8dc8-9a8b5282224c" />
+<img width="2268" height="90" alt="image" src="https://github.com/user-attachments/assets/98d55e01-0eb9-423e-a1e1-43ddee8c5e0a" />
+<img width="2236" height="90" alt="image" src="https://github.com/user-attachments/assets/ab8d4773-1b48-492d-9fa4-a5323a43e27f" />
+<img width="2258" height="112" alt="image" src="https://github.com/user-attachments/assets/1a58c188-6206-4652-91d1-cdc0abb25bb8" />
 
 ---
 
@@ -68,6 +69,7 @@ The team enters Sprint 3 with all PA2 deliverables submitted. Several PA2 tasks 
 | AI 3D-generation service and matching approach                 | Create a 3D-model that simulate the room, and build the matching functions that match the customers' requirements.                                                                                                                     |
 | Complete all UX/UI for all core screens                      | Base on this week UI Prototype file, our group will finish all UX/UI for all functions of the project.|
 | Code the functions of the project that listed on Jira for Sprint 3   | Our group will start coding next week, build all the functions needed and structured in Github.                                                                                 |        
-<img width="2294" height="306" alt="image" src="https://github.com/user-attachments/assets/b7b4a7a4-86e4-4e8a-8603-879d75bde2c4" />
+<img width="2298" height="172" alt="image" src="https://github.com/user-attachments/assets/1953f52a-1085-4132-8ead-1a95756339b3" />
+<img width="2520" height="1150" alt="image" src="https://github.com/user-attachments/assets/19225bf1-4631-412e-9a16-9155f1d9a08b" />
 
 ---
