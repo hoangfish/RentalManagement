@@ -36,26 +36,12 @@
 
 ---
 
-## 3. Issues and Solutions
+### 3. Issues and Solutions
 
-During this week, the team faced several challenges. We discussed them and identified initial solutions.
+*Issue: Uncertainty in selecting suitable technologies and implementation approaches for key system features.*
 
-### Issue 1: Re-edit the format for both Project Plan and Vision Document
-
-After having a non-considerble grade in PA1, our team have some arguments about team roles, because of not achieving the tasks.
-
-**Solution:**
-
-Our team worked together to re-fill all the information needed in both documents, and re-design the document format for matching TAs' requirements
-
-### Issue 2: Conflicts about use-case specification and functions
-
-After TA's review about the scope and the range of functions of the project, our group have some conflicts about some impossible functions.
-
-**Solution:**
-
-We have a meeting and share our own opinions, then receiving final feedback for each opinions. As a result, we can end up with a good spreadsheet for each use-cases
-
+- *Description:* The team faced difficulties in determining suitable technologies and implementation approaches for some key features, particularly AI-based roommate matching, AI-generated room design, and Google Maps integration. The team needed to research available APIs, libraries, and technical solutions to ensure these features could be implemented effectively.
+- *Solution:* Conducted initial research on potential third-party services and implementation methods. The team considered Google Maps API for location services, Google OAuth for authentication, and explored possible AI services for roommate matching and AI-generated room design. Further technical investigation will be carried out during the next development phase.
 ---
 
 
