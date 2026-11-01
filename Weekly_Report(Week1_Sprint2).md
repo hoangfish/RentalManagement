@@ -77,7 +77,7 @@ In next week, our group intend to do some tasks below:
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Draw Use-case model                   | After acknowledging the customers, draw the UML that represent the relationship between each type of                                                                                                                    |
 | Fill the template of Use-case specification                       | All member converted all suggested possible use-cases in this week into the template that TA given.|
-| Create UI for each use-case    | Base on the UI that AI suggested in Sprint 1, our group need to complete the UI for all use-case.                                                                                  |                                                                                                                                       |
+| Create UI for each use-case    | Base on the UI that AI suggested in Sprint 1, our group need to complete the UI for all use-case.                                                                                  |                                                                                                                          
 
 ---
 
