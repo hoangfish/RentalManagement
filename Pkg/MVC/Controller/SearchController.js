@@ -38,21 +38,17 @@ export class SearchController extends Emitter {
     const range = parsePriceRange(form.price);
     const radius = String(form.radiusKm ?? '').trim();
     const params = new URLSearchParams();
-    const address = String(form.address ?? '').trim();
     if (address) params.set('address', address);
     params.set('radiusKm', String(radius === '' ? DEFAULT_RADIUS_KM : parseArea(radius)));
     if (range.min !== null) params.set('minPrice', String(range.min));
     if (range.max !== null) params.set('maxPrice', String(range.max));
     if (String(form.minArea ?? '').trim() !== '') params.set('minArea', String(parseArea(form.minArea)));
-    if (form.nearby?.length) params.set('nearby', form.nearby.join(','));
 
     const seq = ++this.#seq;
-    this.emit('searchStarted');
     const response = await this.http.sendGetRequest(`${URL_ROOMS_SEARCH}?${params}`);
     if (seq !== this.#seq) return; // a newer search is already running
 
     if (response.success) {
-      this.searchModel.setResults(response.data);
       this.emit('searchDone', this.searchModel);
     } else {
       LOG(LogLevel.ERROR, `Search failed: ${response.message}`, TAG);
