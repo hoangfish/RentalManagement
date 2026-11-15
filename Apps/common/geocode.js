@@ -23,23 +23,6 @@ const biasCenter = () => {
     return { lon: (l + r) / 2, lat: (t + b) / 2 };
 };
 
-const cache = new Map();
-let chain = Promise.resolve();
-let lastCall = 0;
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const userAgent = () => `RoommateFinder/1.0 (${process.env.NOMINATIM_CONTACT || 'dev'})`;
-
-// One request at a time, at least MIN_GAP_MS apart.
-function enqueue(task) {
-    const run = chain.then(async () => {
-        const wait = lastCall + MIN_GAP_MS - Date.now();
-        if (wait > 0) await sleep(wait);
-        try { return await task(); } finally { lastCall = Date.now(); }
-    });
-    chain = run.catch(() => {});
-    return run;
-}
 
 async function getJson(url) {
     const res = await fetch(url, {

@@ -6,16 +6,6 @@ const path = require('path');
 const { randomUUID } = require('crypto');
 const multer = require('multer');
 const { AppError } = require('../common/errors');
-const { MAX_PHOTOS, MAX_PANORAMAS, MAX_PANORAMA_BYTES } = require('../common/constant');
-
-const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || path.join(__dirname, '..', '..', 'uploads'));
-const EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
-const SAFE_ID = /^[A-Za-z0-9_-]{1,40}$/;
-
-const roomDir = (roomId) => path.join(UPLOAD_DIR, 'rooms', roomId);
-const photoUrl = (roomId, file) => `/uploads/rooms/${roomId}/${file}`;
-// Panoramas live in the same folder, with a "pano-" prefix so they are easy to tell apart on disk.
-const PANO_PREFIX = 'pano-';
 
 const storage = multer.diskStorage({
     destination(req, file, cb) {
