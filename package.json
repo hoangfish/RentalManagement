@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "node --watch app.js"
+    "dev": "node --watch app.js",
+    "check:net": "node scripts/check-network.js"
   },
   "license": "ISC",
   "dependencies": {

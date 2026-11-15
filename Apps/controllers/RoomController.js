@@ -1,14 +1,18 @@
-// Landlord side of the rooms API. (Tenant search / contact / 3D view come later.)
+// Rooms API: landlord side (post / edit / status) and tenant side (search / contact / 3D view count).
 const { randomUUID } = require('crypto');
 const path = require('path');
 const asyncHandler = require('../middlewares/async');
 const { AppError } = require('../common/errors');
 const { RoomModel } = require('../models/RoomModel');
-const { ROOM_STATUS, MIN_PHOTOS, MAX_PHOTOS } = require('../common/constant');
+const { ROOM_STATUS, MIN_PHOTOS, MAX_PHOTOS, NEARBY } = require('../common/constant');
 const { validateRoomInput, parseOrder } = require('../common/roomValidators');
 const { verifyImages, removeFiles } = require('../common/images');
 const { geocode } = require('../common/geocode');
-const { roomDir } = require('../config/storage');
+const { roomDir, SAFE_ID } = require('../config/storage');
+const { UserModel } = require('../models/UserModel');
+const { distanceKm } = require('../common/geo');
+const { fetchNearby } = require('../common/nearby');
+const { toInt, toNumber } = require('../common/roomValidators');
 
 const invalid = (errors) => new AppError(400, Object.values(errors)[0], errors);
 
@@ -26,6 +30,50 @@ async function locate(address) {
     } catch (err) {
         console.error('Geocoding failed:', err.message);
         return { location: null, warning: NO_PIN_WARNING };
+    }
+}
+
+// Looks up schools / markets / bus stops around the room (OpenStreetMap) and stores them on the room.
+// Runs in the background after saving so the landlord never waits for it; failures are only logged.
+function refreshNearby(roomId, location) {
+    if (!location) return;
+    fetchNearby(location)
+        .then((nearby) => RoomModel.setNearby(roomId, nearby))
+        .catch((err) => console.error('Nearby lookup failed:', err.message));
+}
+
+// Rooms posted while the map service was unreachable have no location yet. Whenever somebody
+// searches, quietly give a few of them one (and look up what is around them). Runs in the background,
+// never makes a search wait, and backs off when the service is still down.
+const RETRY_AFTER_MS = 10 * 60 * 1000;
+const millis = (v) => (v?.toDate ? v.toDate().getTime() : v instanceof Date ? v.getTime() : 0);
+let backfilling = false;
+let backfillPausedUntil = 0;
+async function backfillLocations() {
+    if (backfilling || Date.now() < backfillPausedUntil) return;
+    backfilling = true;
+    try {
+        const now = Date.now();
+        const todo = (await RoomModel.listActive())
+            .filter((r) => !r.location && r.address && now - millis(r.locationTriedAt) > RETRY_AFTER_MS)
+            .slice(0, 5);
+        for (const room of todo) {
+            let found;
+            try {
+                found = await geocode(room.address);
+            } catch (err) {
+                console.error('Location backfill failed:', err.message);
+                backfillPausedUntil = Date.now() + 2 * 60 * 1000;
+                return;
+            }
+            const location = found ? { lat: found.lat, lng: found.lng, approximate: Boolean(found.approximate) } : null;
+            await RoomModel.setLocation(room.id, location);
+            refreshNearby(room.id, location);
+        }
+    } catch (err) {
+        console.error('Location backfill error:', err.message);
+    } finally {
+        backfilling = false;
     }
 }
 
@@ -87,6 +135,7 @@ const createRoom = asyncHandler(async (req, res) => {
             status: publish ? ROOM_STATUS.ACTIVE : ROOM_STATUS.DRAFT,
         });
         saved = true;
+        if (publish) refreshNearby(room.id, location);
         res.status(201).json({
             success: true,
             message: publish ? 'Room posted' : 'Draft saved',
@@ -133,6 +182,9 @@ const updateRoom = asyncHandler(async (req, res) => {
             status,
         });
         saved = true;
+        if (status !== ROOM_STATUS.DRAFT && location && (location !== room.location || room.nearby === undefined)) {
+            refreshNearby(room.id, location);
+        }
         await removeFiles(removed.map((p) => path.join(roomDir(room.id), p.file)));
         res.json({
             success: true,
@@ -178,4 +230,102 @@ const getMyRoom = asyncHandler(async (req, res) => {
     res.json({ success: true, data: { room: RoomModel.toOwner(req.room) } });
 });
 
-module.exports = { createRoom, updateRoom, setRoomStatus, getMyRooms, getMyRoom };
+// ---------- tenant ----------
+
+// Search rooms around an address. Query: address, radiusKm, minPrice, maxPrice, minArea, nearby (comma list)
+const searchRooms = asyncHandler(async (req, res) => {
+    backfillLocations();
+    const q = req.query;
+    const address = String(q.address ?? '').trim().slice(0, 200);
+    const radiusKm = Math.min(50, Math.max(0.1, toNumber(q.radiusKm) || 3));
+    const minPrice = toInt(q.minPrice);
+    const maxPrice = toInt(q.maxPrice);
+    const minArea = toNumber(q.minArea);
+    const wanted = [...new Set(String(q.nearby ?? '').split(',').map((s) => s.trim()).filter((s) => NEARBY.includes(s)))];
+
+    let center = null;
+    if (address) {
+        let found;
+        try {
+            found = await geocode(address);
+        } catch (err) {
+            console.error('Geocoding failed:', err.message);
+            throw new AppError(503, 'Address lookup is temporarily unavailable. Please try again in a moment');
+        }
+        if (!found) {
+            throw new AppError(422, 'We could not find that address. Try adding the ward, district or city', {
+                address: 'We could not find that address. Try adding the ward, district or city',
+            });
+        }
+        center = { lat: found.lat, lng: found.lng, label: found.label, approximate: Boolean(found.approximate) };
+    }
+
+    let rooms = (await RoomModel.listActive()).filter((r) =>
+        (Number.isNaN(minPrice) || r.price >= minPrice) &&
+        (Number.isNaN(maxPrice) || r.price <= maxPrice) &&
+        (Number.isNaN(minArea) || r.area >= minArea));
+
+    let results = rooms.map((r) => ({
+        room: r,
+        distanceKm: center && r.location ? distanceKm(center, r.location) : null,
+    }));
+    if (center) {
+        results = results.filter((x) => x.distanceKm !== null && x.distanceKm <= radiusKm)
+            .sort((a, b) => a.distanceKm - b.distanceKm);
+    } else {
+        const time = (r) => (r.updatedAt?.toDate ? r.updatedAt.toDate() : r.updatedAt)?.getTime?.() ?? 0;
+        results.sort((a, b) => time(b.room) - time(a.room));
+    }
+
+    // Rooms posted before their surroundings were looked up: do it now (a few at a time).
+    if (wanted.length) {
+        let budget = 6;
+        for (const x of results) {
+            if (x.room.nearby !== undefined || !x.room.location || budget <= 0) continue;
+            budget--;
+            try {
+                x.room.nearby = await fetchNearby(x.room.location);
+                await RoomModel.setNearby(x.room.id, x.room.nearby);
+            } catch (err) {
+                console.error('Nearby lookup failed:', err.message);
+            }
+        }
+        results = results.filter((x) => wanted.every((w) => (x.room.nearby || []).includes(w)));
+    }
+
+    res.json({
+        success: true,
+        data: {
+            center,
+            radiusKm,
+            total: results.length,
+            results: results.slice(0, 100).map((x) => ({
+                ...RoomModel.toPublic(x.room),
+                distanceKm: x.distanceKm === null ? null : Math.round(x.distanceKm * 100) / 100,
+            })),
+        },
+    });
+});
+
+const findVisibleRoom = async (id) => {
+    const room = SAFE_ID.test(String(id)) ? await RoomModel.findById(id) : null;
+    if (!room || room.status !== ROOM_STATUS.ACTIVE) throw new AppError(404, 'Room not found');
+    return room;
+};
+
+// Counts a tenant opening the "View 3D" preview (shown on the landlord's dashboard).
+const recordView3d = asyncHandler(async (req, res) => {
+    const room = await findVisibleRoom(req.params.id);
+    await RoomModel.incrementViews(room.id);
+    res.json({ success: true });
+});
+
+// Contact details are only revealed on request, to signed-in tenants, for visible rooms.
+const getContact = asyncHandler(async (req, res) => {
+    const room = await findVisibleRoom(req.params.id);
+    const owner = await UserModel.findById(room.ownerId);
+    if (!owner) throw new AppError(404, 'Owner not found');
+    res.json({ success: true, data: { ownerName: room.ownerName, phone: owner.phone, email: owner.email } });
+});
+
+module.exports = { createRoom, updateRoom, setRoomStatus, getMyRooms, getMyRoom, searchRooms, recordView3d, getContact };

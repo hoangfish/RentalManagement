@@ -72,4 +72,4 @@ function parseOrder(raw) {
     } catch { return undefined; }
 }
 
-module.exports = { validateRoomInput, parseOrder };
+module.exports = { validateRoomInput, parseOrder, toInt, toNumber };

@@ -21,6 +21,9 @@ const ROOM_STATUS = Object.freeze({
 // Keep in sync with CLIENT/Pkg/Common/constant.js
 const AMENITIES = ['Air conditioner', 'Mezzanine', 'Washing machine', 'Parking', 'Kitchen', 'Balcony', 'Furnished'];
 
+// "Near ..." filters on the tenant search page (computed from OpenStreetMap, see common/nearby.js)
+const NEARBY = ['school', 'market', 'bus'];
+
 const MIN_PHOTOS = 6;          // minimum needed to build a 3D model
 const MAX_PHOTOS = 20;
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -30,7 +33,7 @@ const PASSWORD_MAX_BYTES = 72; // bcrypt ignores everything after 72 bytes
 const BCRYPT_ROUNDS = 10;
 
 module.exports = {
-    ROLES, COLLECTIONS, ROOM_STATUS, AMENITIES,
+    ROLES, COLLECTIONS, ROOM_STATUS, AMENITIES, NEARBY,
     MIN_PHOTOS, MAX_PHOTOS, MAX_PHOTO_BYTES,
     PASSWORD_MIN_LENGTH, PASSWORD_MAX_BYTES, BCRYPT_ROUNDS,
 };
