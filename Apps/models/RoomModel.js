@@ -1,6 +1,6 @@
 // Firestore: rooms/{roomId}
 //   ownerId, ownerName, title, address, location {lat,lng,approximate}|null, area, price, maxPeople,
-//   description, amenities[], nearby[] ('school'|'market'|'bus', from OpenStreetMap), photos[{id,file}], status, views3d, createdAt, updatedAt
+//   description, amenities[], nearby[] ('school'|'market'|'bus', from OpenStreetMap), photos[{id,file}], panoramas[{id,file,label}] (360° photos), status, views3d, createdAt, updatedAt
 const { getDb } = require('../config/db');
 const { COLLECTIONS, ROOM_STATUS } = require('../common/constant');
 const { photoUrl } = require('../config/storage');
@@ -8,6 +8,7 @@ const { photoUrl } = require('../config/storage');
 const col = () => getDb().collection(COLLECTIONS.ROOMS);
 const toDate = (v) => (v && typeof v.toDate === 'function' ? v.toDate() : v instanceof Date ? v : null);
 const photosOf = (room) => (room.photos || []).map((p) => ({ id: p.id, url: photoUrl(room.id, p.file) }));
+const panoramasOf = (room) => (room.panoramas || []).map((p) => ({ id: p.id, label: p.label || '', url: photoUrl(room.id, p.file) }));
 const fromDoc = (doc) => (doc.exists ? { id: doc.id, ...doc.data() } : null);
 
 class RoomModel {
@@ -73,6 +74,7 @@ class RoomModel {
             amenities: room.amenities || [],
             nearby: room.nearby || [],
             photos: photosOf(room),
+            panoramas: panoramasOf(room),
             updatedAt: toDate(room.updatedAt)?.toISOString() ?? null,
         };
     }
@@ -92,6 +94,7 @@ class RoomModel {
             amenities: room.amenities || [],
             nearby: room.nearby || [],
             photos: photosOf(room),
+            panoramas: panoramasOf(room),
             status: room.status,
             views3d: room.views3d || 0,
             createdAt: toDate(room.createdAt)?.toISOString() ?? null,

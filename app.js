@@ -46,10 +46,13 @@ app.use((err, req, res, next) => {
         return res.status(err.status).json({ success: false, message: err.message, ...(err.errors && { errors: err.errors }) });
     }
     if (err.name === 'MulterError') {
-        const message = err.code === 'LIMIT_FILE_SIZE' ? 'Each photo must be under 10 MB'
+        const pano = err.field === 'panoramas';
+        const message = err.code === 'LIMIT_FILE_SIZE' ? 'A file is too large (photos: up to 10 MB, 360° photo: up to 25 MB)'
+            : pano && (err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE') ? 'You can add one 360° photo for now'
             : err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE' ? 'You can upload at most 20 photos'
             : 'Upload failed';
-        return res.status(400).json({ success: false, message, errors: { photos: message } });
+        const key = pano ? 'panoramas' : 'photos';
+        return res.status(400).json({ success: false, message, errors: { [key]: message } });
     }
     if (err.type === 'entity.parse.failed') {
         return res.status(400).json({ success: false, message: 'Invalid JSON body' });

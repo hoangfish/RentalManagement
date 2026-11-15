@@ -4,9 +4,11 @@ const path = require('path');
 const asyncHandler = require('../middlewares/async');
 const { AppError } = require('../common/errors');
 const { RoomModel } = require('../models/RoomModel');
-const { ROOM_STATUS, MIN_PHOTOS, MAX_PHOTOS, NEARBY } = require('../common/constant');
-const { validateRoomInput, parseOrder } = require('../common/roomValidators');
-const { verifyImages, removeFiles } = require('../common/images');
+const {
+    ROOM_STATUS, MIN_PHOTOS, MAX_PHOTOS, MAX_PANORAMAS, NEARBY, PANORAMA_LABEL_MAX,
+} = require('../common/constant');
+const { validateRoomInput, parseOrder, parsePanoramaPlan } = require('../common/roomValidators');
+const { verifyImages, verifyPanoramas, removeFiles } = require('../common/images');
 const { geocode } = require('../common/geocode');
 const { roomDir, SAFE_ID } = require('../config/storage');
 const { UserModel } = require('../models/UserModel');
@@ -108,12 +110,49 @@ function buildPhotos(order, existing, files) {
 function checkPhotoCount(count, mustHaveMin) {
     if (count > MAX_PHOTOS) throw invalid({ photos: `You can upload at most ${MAX_PHOTOS} photos` });
     if (mustHaveMin && count < MIN_PHOTOS) {
-        throw invalid({ photos: `Add at least ${MIN_PHOTOS} photos so a 3D model can be built (you have ${count})` });
+        throw invalid({ photos: 'Add at least one photo of the room (it becomes the cover)' });
     }
 }
 
+// The 360° photos of a room. `plan` comes from parsePanoramaPlan:
+//   null      -> the request says nothing about 360° photos: keep the existing ones
+//   [{id,label}] -> the final list; "new" entries take the uploaded files in order; existing ids left out are deleted
+// Labels default to "Spot 1", "Spot 2"… so the future "jump to another spot" menu always has a name.
+function buildPanoramas(plan, existing, files) {
+    const bad = (message) => invalid({ panoramas: message });
+    if (plan === undefined) throw bad('360° photo list is invalid');
+    if (plan?.tooLong) throw bad(`A 360° photo name must be at most ${PANORAMA_LABEL_MAX} characters`);
+    if (plan === null) {
+        if (files.length) throw bad('360° photo list is invalid');
+        return { panoramas: existing, removed: [] };
+    }
+    if (plan.length > MAX_PANORAMAS) {
+        throw bad(MAX_PANORAMAS === 1 ? 'You can add one 360° photo for now' : `You can add at most ${MAX_PANORAMAS} 360° photos`);
+    }
+
+    const byId = new Map(existing.map((p) => [p.id, p]));
+    const seen = new Set();
+    let next = 0;
+    const panoramas = plan.map((item, i) => {
+        const label = item.label || `Spot ${i + 1}`;
+        if (item.id === 'new') {
+            if (next >= files.length) throw bad('360° photo list is invalid');
+            return { id: randomUUID().slice(0, 12), file: files[next++].filename, label };
+        }
+        if (!byId.has(item.id) || seen.has(item.id)) throw bad('360° photo list is invalid');
+        seen.add(item.id);
+        return { ...byId.get(item.id), label };
+    });
+    if (next !== files.length) throw bad('360° photo list is invalid');
+    return { panoramas, removed: existing.filter((p) => !seen.has(p.id)) };
+}
+
+// multer puts uploads in req.files.photos / req.files.panoramas
+const uploadedFiles = (req) => ({ photos: req.files?.photos || [], panoramas: req.files?.panoramas || [] });
+
 const createRoom = asyncHandler(async (req, res) => {
-    const files = req.files || [];
+    const { photos: files, panoramas: panoFiles } = uploadedFiles(req);
+    const allPaths = [...files, ...panoFiles].map((f) => f.path);
     let saved = false;
     try {
         const publish = req.body.intent === 'publish';
@@ -121,8 +160,10 @@ const createRoom = asyncHandler(async (req, res) => {
         if (Object.keys(errors).length) throw invalid(errors);
 
         await verifyImages(files);
+        await verifyPanoramas(panoFiles);
         const { photos } = buildPhotos(parseOrder(req.body.photoOrder), [], files);
         checkPhotoCount(photos.length, publish);
+        const { panoramas } = buildPanoramas(parsePanoramaPlan(req.body.panoramaPlan), [], panoFiles);
 
         const { location, warning } = value.address ? await locate(value.address) : { location: null, warning: null };
         const room = await RoomModel.create({
@@ -132,6 +173,7 @@ const createRoom = asyncHandler(async (req, res) => {
             ownerName: value.ownerName || `${req.user.firstName} ${req.user.lastName}`,
             location,
             photos,
+            panoramas,
             status: publish ? ROOM_STATUS.ACTIVE : ROOM_STATUS.DRAFT,
         });
         saved = true;
@@ -143,12 +185,13 @@ const createRoom = asyncHandler(async (req, res) => {
             data: { room: RoomModel.toOwner(room) },
         });
     } finally {
-        if (!saved) await removeFiles(files.map((f) => f.path));
+        if (!saved) await removeFiles(allPaths);
     }
 });
 
 const updateRoom = asyncHandler(async (req, res) => {
-    const files = req.files || [];
+    const { photos: files, panoramas: panoFiles } = uploadedFiles(req);
+    const allPaths = [...files, ...panoFiles].map((f) => f.path);
     const room = req.room;
     let saved = false;
     try {
@@ -165,6 +208,9 @@ const updateRoom = asyncHandler(async (req, res) => {
         await verifyImages(files);
         const { photos, removed } = buildPhotos(parseOrder(req.body.photoOrder), room.photos || [], files);
         checkPhotoCount(photos.length, requireAll);
+        await verifyPanoramas(panoFiles);
+        const { panoramas, removed: removedPanoramas } =
+            buildPanoramas(parsePanoramaPlan(req.body.panoramaPlan), room.panoramas || [], panoFiles);
 
         let location = room.location || null;
         let warning = null;
@@ -179,13 +225,14 @@ const updateRoom = asyncHandler(async (req, res) => {
             ownerName: value.ownerName || room.ownerName,
             location,
             photos,
+            panoramas,
             status,
         });
         saved = true;
         if (status !== ROOM_STATUS.DRAFT && location && (location !== room.location || room.nearby === undefined)) {
             refreshNearby(room.id, location);
         }
-        await removeFiles(removed.map((p) => path.join(roomDir(room.id), p.file)));
+        await removeFiles([...removed, ...removedPanoramas].map((p) => path.join(roomDir(room.id), p.file)));
         res.json({
             success: true,
             message: status === ROOM_STATUS.DRAFT ? 'Draft saved' : intent === 'publish' ? 'Room posted' : 'Changes saved',
@@ -193,7 +240,7 @@ const updateRoom = asyncHandler(async (req, res) => {
             data: { room: RoomModel.toOwner(updated) },
         });
     } finally {
-        if (!saved) await removeFiles(files.map((f) => f.path));
+        if (!saved) await removeFiles(allPaths);
     }
 });
 

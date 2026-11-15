@@ -1,4 +1,4 @@
-const { AMENITIES } = require('./constant');
+const { AMENITIES, PANORAMA_LABEL_MAX } = require('./constant');
 
 const clean = (v) => String(v ?? '').trim().replace(/[ \t]+/g, ' ');
 
@@ -72,4 +72,24 @@ function parseOrder(raw) {
     } catch { return undefined; }
 }
 
-module.exports = { validateRoomInput, parseOrder, toInt, toNumber };
+// panoramaPlan = JSON array describing the final list of 360° photos, in order:
+//   [{ "id": "<existing id>" | "new", "label": "Living room" }, ...]
+// The n-th "new" is the n-th uploaded file in the `panoramas` field.
+// Returns null when not sent (= keep what is there), undefined when malformed, else [{ id, label }].
+function parsePanoramaPlan(raw) {
+    if (raw === undefined || raw === '') return null;
+    try {
+        const list = JSON.parse(raw);
+        if (!Array.isArray(list)) return undefined;
+        const plan = [];
+        for (const item of list) {
+            if (!item || typeof item !== 'object' || typeof item.id !== 'string') return undefined;
+            const label = clean(item.label ?? '');
+            if (label.length > PANORAMA_LABEL_MAX) return { tooLong: true };
+            plan.push({ id: item.id, label });
+        }
+        return plan;
+    } catch { return undefined; }
+}
+
+module.exports = { validateRoomInput, parseOrder, parsePanoramaPlan, toInt, toNumber };
