@@ -8,18 +8,7 @@ import { openTourDialog } from './tourDialog.js';
 // Returns { close } so the caller can close it when leaving the page.
 export function openRoomDialog({ room, controller, center }) {
   const panoramas = room.panoramas || [];
-  const has3d = panoramas.length > 0;
-  const previouslyFocused = document.activeElement;
-  const backdrop = document.createElement('div');
-  backdrop.className = 'dialog-backdrop';
-
-  const photos = room.photos.map((p) => assetUrl(p.url));
-  const facts = [
-    room.distanceKm != null && center ? `${center.approximate ? '~' : ''}${formatDistance(room.distanceKm)} from your address` : '',
-    room.area ? `${room.area} m²` : '',
-    room.maxPeople ? `up to ${room.maxPeople} ${room.maxPeople === 1 ? 'person' : 'people'}` : '',
-  ].filter(Boolean).join(' • ');
-  const tags = [...room.amenities, ...room.nearby.map((n) => NEARBY_LABEL[n]).filter(Boolean)];
+  amenities, ...room.nearby.map((n) => NEARBY_LABEL[n]).filter(Boolean)];
 
   backdrop.innerHTML = `
     <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
@@ -50,17 +39,7 @@ export function openRoomDialog({ room, controller, center }) {
   document.body.appendChild(backdrop);
   document.body.classList.add('no-scroll');
 
-  const $ = (s) => backdrop.querySelector(s);
-  const offs = [];
-  const close = () => {
-    tour?.close(); // (this also sets tour back to null)
-    offs.forEach((off) => off());
-    document.removeEventListener('keydown', onKey);
-    document.body.classList.remove('no-scroll');
-    backdrop.remove();
-    previouslyFocused?.focus?.();
-  };
-  const onKey = (e) => { if (e.key === 'Escape') close(); };
+ .key === 'Escape') close(); };
   document.addEventListener('keydown', onKey);
 
   $('.dialog-close').addEventListener('click', close);

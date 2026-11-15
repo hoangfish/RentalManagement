@@ -14,12 +14,7 @@ function loadLeaflet() {
     const css = document.createElement('link');
     css.rel = 'stylesheet';
     css.href = new URL('leaflet.css', base).href;
-    document.head.appendChild(css);
-    const script = document.createElement('script');
-    script.src = new URL('leaflet.js', base).href;
-    script.onload = () => (window.L ? resolve(window.L) : reject(new Error('Leaflet did not start')));
-    script.onerror = () => { leafletPromise = null; reject(new Error('Leaflet could not be loaded')); };
-    document.head.appendChild(script);
+    
   });
   return leafletPromise;
 }
@@ -29,12 +24,7 @@ const pin = (cls) => `<span class="pin ${cls}"></span>`;
 export class RoomMap {
   #el; #onSelect; #L = null; #map = null; #layer = null;
   #markers = new Map();  // roomId -> marker
-  #pending = null;       // data given before Leaflet finished loading
-  #selected = null;
-  #destroyed = false;
-  #tiles = null;
-  #sourceIndex = 0;
-  #notice = null;
+  
 
   constructor(el, { onSelect = () => {} } = {}) {
     this.#el = el;
@@ -79,14 +69,7 @@ export class RoomMap {
   // The current source is not answering: move on to the next one, or tell the user.
   #tilesUnreachable() {
     if (this.#destroyed || !this.#map) return;
-    if (this.#sourceIndex + 1 < MAP_TILE_SOURCES.length) {
-      this.#tiles.remove();
-      this.#addTiles(this.#sourceIndex + 1);
-      return;
-    }
-    this.#notice.textContent = 'The map pictures cannot be loaded. This computer may be blocking the map servers, or the connection is down. Your results still work.';
-    this.#notice.hidden = false;
-  }
+    
 
   icon(cls) {
     return this.#L.divIcon({ className: 'pin-wrap', html: pin(cls), iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
