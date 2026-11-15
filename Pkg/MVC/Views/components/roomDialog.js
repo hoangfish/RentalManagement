@@ -1,10 +1,14 @@
 import { escapeHtml } from './dom.js';
 import { formatMoney, formatDistance } from './format.js';
 import { assetUrl, NEARBY_LABEL } from '../../../Common/constant.js';
+import { icons } from './icons.js';
+import { openTourDialog } from './tourDialog.js';
 
-// Room details: photo gallery, facts, 3D placeholder and "show contact details".
+// Room details: photo gallery, facts, the 360° "View 3D" button and "show contact details".
 // Returns { close } so the caller can close it when leaving the page.
 export function openRoomDialog({ room, controller, center }) {
+  const panoramas = room.panoramas || [];
+  const has3d = panoramas.length > 0;
   const previouslyFocused = document.activeElement;
   const backdrop = document.createElement('div');
   backdrop.className = 'dialog-backdrop';
@@ -23,7 +27,7 @@ export function openRoomDialog({ room, controller, center }) {
       <div class="dialog-gallery">
         <div class="dialog-main">
           ${photos.length ? `<img id="dlg-main" src="${escapeHtml(photos[0])}" alt="Photo 1 of ${photos.length}">` : '<span class="muted">No photos</span>'}
-          <span class="badge-3d">3D soon</span>
+          ${has3d ? `<button type="button" class="view3d-btn" id="view3d-btn">${icons.panorama(20)} View in 3D (360°)</button>` : ''}
         </div>
         <div class="dialog-thumbs">${photos.map((src, i) =>
           `<button type="button" class="thumb-btn${i === 0 ? ' on' : ''}" data-i="${i}" aria-label="Show photo ${i + 1}"><img src="${escapeHtml(src)}" alt=""></button>`).join('')}</div>
@@ -35,7 +39,9 @@ export function openRoomDialog({ room, controller, center }) {
         <p>${escapeHtml(facts)}</p>
         ${tags.length ? `<div class="chips static">${tags.map((t) => `<span class="chip">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
         ${room.description ? `<p class="dialog-desc">${escapeHtml(room.description)}</p>` : ''}
-        <div class="photo-status">The 3D walkthrough of this room is coming soon. For now, browse the photos above.</div>
+        ${has3d
+          ? `<button type="button" class="btn btn-outline" id="view3d-btn2">${icons.panorama(18)} Look around in 3D</button>`
+          : '<div class="photo-status">The owner has not added a 3D (360°) view of this room yet. Browse the photos above.</div>'}
         <div class="contact" id="contact">
           <button type="button" class="btn btn-primary" id="contact-btn">Show contact details</button>
         </div>
@@ -47,6 +53,7 @@ export function openRoomDialog({ room, controller, center }) {
   const $ = (s) => backdrop.querySelector(s);
   const offs = [];
   const close = () => {
+    tour?.close(); // (this also sets tour back to null)
     offs.forEach((off) => off());
     document.removeEventListener('keydown', onKey);
     document.body.classList.remove('no-scroll');
@@ -66,6 +73,16 @@ export function openRoomDialog({ room, controller, center }) {
     $('#dlg-main').alt = `Photo ${i + 1} of ${photos.length}`;
     backdrop.querySelectorAll('.thumb-btn').forEach((b) => b.classList.toggle('on', b === btn));
   });
+
+  // Opening the 3D view is what counts as a "3D view" on the landlord's dashboard.
+  let tour = null;
+  const open3d = () => {
+    if (tour) return;
+    controller.recordView3d(room.id);
+    tour = openTourDialog({ title: room.title, panoramas, onClose: () => { tour = null; } });
+  };
+  $('#view3d-btn')?.addEventListener('click', open3d);
+  $('#view3d-btn2')?.addEventListener('click', open3d);
 
   const box = $('#contact');
   const contactBtn = $('#contact-btn');

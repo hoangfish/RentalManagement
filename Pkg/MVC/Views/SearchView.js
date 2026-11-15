@@ -154,7 +154,7 @@ export class SearchView extends BaseView {
           <p class="small">${escapeHtml(meta)}</p>
           <p class="room-price">${formatMoney(room.price)} đ/month</p>
         </div>
-        <div class="result-act"><button type="button" class="btn btn-primary btn-sm" data-view3d>View 3D</button></div>
+        <div class="result-act"><button type="button" class="btn btn-primary btn-sm" data-view3d>${room.panoramas?.length ? 'View 3D' : 'View details'}</button></div>
       </article>`;
   }
 
@@ -171,7 +171,6 @@ export class SearchView extends BaseView {
     const room = model.find(id);
     if (!room) return;
     this.select(id);
-    search.recordView3d(id);
     this.#dialog?.close();
     this.#dialog = openRoomDialog({ room, controller: search, center: model.center });
   }

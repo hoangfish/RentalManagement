@@ -1,6 +1,6 @@
 // Mirrors HTTP_SERVER/Apps/common/validators.js so users get instant feedback.
 // The server stays the source of truth and re-checks everything.
-import { ROLES, MIN_PHOTOS, MAX_PHOTOS } from './constant.js';
+import { ROLES, MIN_PHOTOS, MAX_PHOTOS, PANORAMA_LABEL_MAX } from './constant.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^\d{10,11}$/;
@@ -62,7 +62,7 @@ export const parseArea = (v) => {
 };
 
 // publish=false (draft): only the title is required, but whatever is filled in must be valid.
-export function validateRoom({ ownerName, title, address, area, price, maxPeople, description }, { publish, photoCount }) {
+export function validateRoom({ ownerName, title, address, area, price, maxPeople, description }, { publish, photoCount, panoramaLabel }) {
   const errors = {};
   const t = String(title ?? '').trim();
   const a = String(address ?? '').trim();
@@ -89,7 +89,10 @@ export function validateRoom({ ownerName, title, address, area, price, maxPeople
 
   if (photoCount > MAX_PHOTOS) errors.photos = `You can upload at most ${MAX_PHOTOS} photos`;
   else if (publish && photoCount < MIN_PHOTOS) {
-    errors.photos = `Add at least ${MIN_PHOTOS} photos so a 3D model can be built (you have ${photoCount})`;
+    errors.photos = 'Add at least one photo of the room (it becomes the cover)';
+  }
+  if (String(panoramaLabel ?? '').trim().length > PANORAMA_LABEL_MAX) {
+    errors.panoramas = `The 360° photo name must be at most ${PANORAMA_LABEL_MAX} characters`;
   }
   return errors;
 }

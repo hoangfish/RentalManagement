@@ -1,11 +1,12 @@
 import { BaseView } from './BaseView.js';
 import {
-  ROUTES, ROOM_STATUS, APP_NAME, AMENITIES, MIN_PHOTOS, MAX_PHOTOS, assetUrl,
+  ROUTES, ROOM_STATUS, APP_NAME, AMENITIES, MIN_PHOTOS, MAX_PHOTOS, PANORAMA_LABEL_MAX, assetUrl,
 } from '../../Common/constant.js';
 import { RoomController } from '../Controller/RoomController.js';
 import { appBar, wireAppBar } from './components/appBar.js';
 import { escapeHtml } from './components/dom.js';
-import { prepareImage } from './components/imageTools.js';
+import { prepareImage, preparePanorama } from './components/imageTools.js';
+import { openTourDialog } from './components/tourDialog.js';
 import { toast } from './components/toast.js';
 import { icons } from './components/icons.js';
 import { textField } from './components/fields.js';
@@ -23,6 +24,11 @@ export class RoomFormView extends BaseView {
   #busy = false;
   #photoError = '';
   #photoNote = '';
+  #pano = null;           // the 360° photo: { kind: 'existing', id, url } | { kind: 'new', blob, name, url, width, height }
+  #panoLabel = '';
+  #panoError = '';
+  #panoNote = '';
+  #tour = null;
 
   constructor(ctx, params) {
     super(ctx, params);
@@ -67,16 +73,26 @@ export class RoomFormView extends BaseView {
               <div class="chips" id="amenities">${chips}</div>
             </section>
 
+            <div class="form-col">
+            <section class="card photos-card pano-card">
+              <h3>3D view – 360° photo <span class="optional">optional</span></h3>
+              <p class="muted small">Tenants can look all around your room in 3D from one 360° photo. Stand in the middle of the room
+                and shoot with a 360° camera or a 360° photo app. The photo must be a flat “equirectangular” picture, twice as wide as it is tall (2:1).</p>
+              <div id="pano-slot"></div>
+              <input type="file" id="pano-input" accept="image/jpeg,image/png,image/webp" hidden>
+              <div class="photo-status" id="pano-status" role="status" hidden></div>
+            </section>
+
             <section class="card photos-card">
               <h3>Room photos</h3>
-              <p class="muted small">Take photos of every angle, going around the room in order, so the system can build a 3D model.
-                The first photo is the cover.</p>
+              <p class="muted small">Add clear photos of the room. The first photo is the cover tenants see in the search results.</p>
               <div class="photo-grid" id="photo-grid"></div>
               <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" multiple hidden>
               <div class="photo-status" id="photo-status" role="status"></div>
               <div class="form-error" hidden></div>
               <div class="form-actions" id="actions"></div>
             </section>
+            </div>
           </form>
         </main>
       </div>`;
@@ -131,6 +147,24 @@ export class RoomFormView extends BaseView {
       if (e.dataTransfer?.files?.length) this.addFiles(e.dataTransfer.files);
     });
 
+    const panoInput = this.$('#pano-input');
+    panoInput.addEventListener('change', () => { this.setPanorama(panoInput.files[0]); panoInput.value = ''; });
+    const slot = this.$('#pano-slot');
+    slot.addEventListener('click', (e) => {
+      const action = e.target.closest('[data-pano]')?.dataset.pano;
+      if (action === 'pick') panoInput.click();
+      else if (action === 'remove') { this.revokePano(); this.#pano = null; this.#panoLabel = ''; this.#panoError = ''; this.paintPano(); }
+      else if (action === 'preview') this.previewPano();
+    });
+    slot.addEventListener('input', (e) => { if (e.target.matches('[name="panoLabel"]')) this.#panoLabel = e.target.value; });
+    slot.addEventListener('dragover', (e) => { e.preventDefault(); slot.classList.add('drop'); });
+    slot.addEventListener('dragleave', () => slot.classList.remove('drop'));
+    slot.addEventListener('drop', (e) => {
+      e.preventDefault();
+      slot.classList.remove('drop');
+      if (e.dataTransfer?.files?.[0]) this.setPanorama(e.dataTransfer.files[0]);
+    });
+
     this.$('#room-form').addEventListener('submit', (e) => { e.preventDefault(); this.submit(this.isDraft ? 'publish' : 'save'); });
     this.$('#actions').addEventListener('click', (e) => {
       const button = e.target.closest('button[data-intent]');
@@ -139,12 +173,15 @@ export class RoomFormView extends BaseView {
 
     this.paintAmenities();
     this.paintPhotos();
+    this.paintPano();
     this.paintActions();
   }
 
   destroy() {
     super.destroy();
+    this.#tour?.close();
     this.#items.forEach((item) => this.revoke(item));
+    this.revokePano();
   }
 
   // ---------- filling / reading the form ----------
@@ -159,10 +196,14 @@ export class RoomFormView extends BaseView {
     this.$('[name="maxPeople"]').value = room.maxPeople ?? '';
     this.#amenities = new Set(room.amenities);
     this.#items = room.photos.map((p) => ({ key: `k${this.#seq++}`, kind: 'existing', id: p.id, url: assetUrl(p.url) }));
+    const pano = room.panoramas?.[0];
+    this.#pano = pano ? { kind: 'existing', id: pano.id, url: assetUrl(pano.url) } : null;
+    this.#panoLabel = pano?.label ?? '';
     this.$('#load-state').hidden = true;
     this.$('#room-form').hidden = false;
     this.paintAmenities();
     this.paintPhotos();
+    this.paintPano();
     this.paintActions();
   }
 
@@ -270,13 +311,70 @@ export class RoomFormView extends BaseView {
       status.textContent = this.#photoNote;
     } else if (n === 0) {
       status.classList.add('warn');
-      status.textContent = `No photos yet • Add at least ${MIN_PHOTOS} photos to build a 3D model`;
-    } else if (n < MIN_PHOTOS) {
-      status.classList.add('warn');
-      status.textContent = `${n} ${n === 1 ? 'photo' : 'photos'} ready • Add ${MIN_PHOTOS - n} more to build a 3D model (minimum ${MIN_PHOTOS})`;
+      status.textContent = `No photos yet • Add at least ${MIN_PHOTOS} photo to post the room`;
     } else {
-      status.textContent = `${n} photos ready • Enough to build a 3D model (minimum ${MIN_PHOTOS})`;
+      status.textContent = `${n} ${n === 1 ? 'photo' : 'photos'} ready`;
     }
+  }
+
+  // ---------- 360° photo ----------
+
+  revokePano() {
+    if (this.#pano?.kind === 'new') URL.revokeObjectURL?.(this.#pano.url);
+  }
+
+  async setPanorama(file) {
+    if (!file) return;
+    this.#panoError = '';
+    this.#panoNote = 'Checking the 360° photo…';
+    this.paintPano();
+    try {
+      const { blob, width, height } = await preparePanorama(file);
+      this.revokePano();
+      this.#pano = { kind: 'new', blob, name: blob.name || file.name, url: URL.createObjectURL(blob), width, height };
+      if (!this.#panoLabel) this.#panoLabel = '';
+    } catch (err) {
+      this.#panoError = `${file.name}: ${err.message}`;
+    }
+    this.#panoNote = '';
+    this.paintPano();
+  }
+
+  previewPano() {
+    if (!this.#pano || this.#tour) return;
+    this.#tour = openTourDialog({
+      title: this.$('[name="title"]').value.trim() || 'Your room',
+      panoramas: [{ url: this.#pano.url, label: this.#panoLabel.trim() }],
+      onClose: () => { this.#tour = null; },
+    });
+  }
+
+  paintPano() {
+    const slot = this.$('#pano-slot');
+    const status = this.$('#pano-status');
+    if (!this.#pano) {
+      slot.innerHTML = `<button type="button" class="photo-add pano-add" data-pano="pick">${icons.panorama(22)} Add 360° photo</button>`;
+    } else {
+      const size = this.#pano.width ? `${this.#pano.width}×${this.#pano.height}` : '';
+      slot.innerHTML = `
+        <div class="pano-picked">
+          <div class="pano-thumb"><img src="${escapeHtml(this.#pano.url)}" alt="Flat preview of your 360° photo"><span class="photo-no">360°${size ? ` • ${size}` : ''}</span></div>
+          <div class="pano-side">
+            <label class="label-sm" for="pano-label">Name of this view (optional)</label>
+            <input id="pano-label" name="panoLabel" class="pano-label" type="text" maxlength="${PANORAMA_LABEL_MAX}"
+              placeholder="e.g. Living room" value="${escapeHtml(this.#panoLabel)}">
+            <div class="pano-actions">
+              <button type="button" class="btn btn-primary btn-sm" data-pano="preview">${icons.panorama(16)} Preview in 3D</button>
+              <button type="button" class="btn btn-outline btn-sm" data-pano="pick">Replace</button>
+              <button type="button" class="btn btn-ghost btn-sm" data-pano="remove">Remove</button>
+            </div>
+          </div>
+        </div>`;
+    }
+    status.className = 'photo-status';
+    status.hidden = !(this.#panoError || this.#panoNote);
+    if (this.#panoError) { status.classList.add('error'); status.textContent = this.#panoError; }
+    else status.textContent = this.#panoNote;
   }
 
   // ---------- buttons / saving ----------
@@ -300,7 +398,9 @@ export class RoomFormView extends BaseView {
   submit(intent) {
     if (this.#busy || !this.#ready) return;
     this.#photoError = '';
+    this.#panoError = '';
     this.paintPhotos();
+    this.paintPano();
     this.clearFormErrors();
     this.setBusy2(true, intent);
     RoomController.getInstance().saveRoom({
@@ -312,11 +412,22 @@ export class RoomFormView extends BaseView {
       photos: this.#items.map((it) => (it.kind === 'existing'
         ? { kind: 'existing', id: it.id }
         : { kind: 'new', blob: it.blob, name: it.name })),
+      panorama: !this.#pano ? null : this.#pano.kind === 'existing'
+        ? { kind: 'existing', id: this.#pano.id, label: this.#panoLabel }
+        : { kind: 'new', blob: this.#pano.blob, name: this.#pano.name, label: this.#panoLabel },
     });
   }
 
   showErrors(message, errors = {}) {
-    const { photos: photoError, ...fieldErrors } = errors;
+    const { photos: photoError, panoramas: panoError, ...fieldErrors } = errors;
+    if (panoError) {
+      this.#panoError = panoError;
+      this.paintPano();
+      this.clearFormErrors();
+      if (Object.keys(fieldErrors).length) this.showFormErrors(message, fieldErrors);
+      else this.$('#pano-status').scrollIntoView?.({ block: 'center' });
+      return;
+    }
     if (photoError) {
       this.#photoError = photoError;
       this.paintPhotos();

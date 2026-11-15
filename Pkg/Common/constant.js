@@ -64,8 +64,18 @@ export const MAP_TILE_SOURCES = Object.freeze([
     attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, TomTom, Intermap, USGS, METI, and others' },
 ]);
 
-export const MIN_PHOTOS = 6;   // minimum needed to build a 3D model
+export const MIN_PHOTOS = 1;   // a posted room needs at least one normal photo (the cover)
 export const MAX_PHOTOS = 20;
 export const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+
+// 360° photos (keep in sync with HTTP_SERVER/Apps/common/constant.js).
+// One for now; later one per spot, linked together.
+export const MAX_PANORAMAS = 1;
+export const MAX_PANORAMA_BYTES = 25 * 1024 * 1024;
+export const PANORAMA_MIN_WIDTH = 2048;
+export const PANORAMA_MAX_WIDTH = 8192;
+export const PANORAMA_SHRINK_WIDTH = 5760;   // too-large photos are shrunk to this (keeps phone canvases happy)
+export const PANORAMA_RATIO_TOLERANCE = 0.03; // width / height may be 2 ± 3 %
+export const PANORAMA_LABEL_MAX = 40;
 
 export const STORAGE_KEYS = Object.freeze({ TOKEN: 'rf.token' });

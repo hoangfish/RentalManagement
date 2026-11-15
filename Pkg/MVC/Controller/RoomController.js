@@ -50,10 +50,13 @@ export class RoomController extends Emitter {
   // photos: in the order chosen by the landlord:
   //   { kind: 'existing', id }            – already on the server
   //   { kind: 'new', blob, name }         – picked just now
+  // panorama: the room's 360° photo, or null for none:
+  //   { kind: 'existing', id, label }       – already on the server
+  //   { kind: 'new', blob, name, label }    – picked just now
   // intent: 'draft' | 'publish' | 'save'
   // requireAll: true when the room must be complete (publishing, or editing a room that is already posted)
-  async saveRoom({ id = null, intent, requireAll, fields, amenities, photos }) {
-    const errors = validateRoom(fields, { publish: requireAll, photoCount: photos.length });
+  async saveRoom({ id = null, intent, requireAll, fields, amenities, photos, panorama = null }) {
+    const errors = validateRoom(fields, { publish: requireAll, photoCount: photos.length, panoramaLabel: panorama?.label });
     if (Object.keys(errors).length) {
       this.emit('roomSaveFailed', firstError(errors), errors);
       return;
@@ -65,6 +68,11 @@ export class RoomController extends Emitter {
     form.append('amenities', JSON.stringify(amenities));
     form.append('photoOrder', JSON.stringify(photos.map((p) => (p.kind === 'existing' ? p.id : 'new'))));
     for (const p of photos) if (p.kind === 'new') form.append('photos', p.blob, p.name);
+    // The 360° list is always sent so removing it works too (an empty list = no 360° photo).
+    form.append('panoramaPlan', JSON.stringify(panorama
+      ? [{ id: panorama.kind === 'existing' ? panorama.id : 'new', label: String(panorama.label ?? '').trim() }]
+      : []));
+    if (panorama?.kind === 'new') form.append('panoramas', panorama.blob, panorama.name);
 
     const response = id
       ? await this.http.sendFormRequest('PATCH', `${URL_ROOMS}/${encodeURIComponent(id)}`, form)
