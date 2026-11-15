@@ -10,6 +10,7 @@ export class RoomModel extends Emitter {
   get loaded() { return this.#loaded; }
 
   get activeCount() { return this.#rooms.filter((r) => r.status === ROOM_STATUS.ACTIVE).length; }
+  get views3d() { return this.#rooms.reduce((sum, r) => sum + (r.views3d || 0), 0); }
 
   setRooms(rooms = []) {
     this.#rooms = rooms;

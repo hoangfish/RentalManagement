@@ -3,6 +3,7 @@ import {
   URL_USER_REGISTER, URL_USER_LOGIN, URL_USER_LOGOUT, URL_USER_ME, STORAGE_KEYS,
 } from '../../Common/constant.js';
 import {
+  validateRegister, validateLogin, firstError, normalizeEmail, normalizePhone,
 } from '../../Common/validators.js';
 import { HttpClientImpl } from '../../Protocols/Http/httpclientimpl.js';
 import { SocketClient } from '../../Protocols/SocketIO/socketclient.js';
@@ -20,6 +21,7 @@ export class UserController extends Emitter {
   static #instance = null;
   static getInstance() {
     if (!UserController.#instance) UserController.#instance = new UserController();
+    return UserController.#instance;
   }
 
   constructor() {
