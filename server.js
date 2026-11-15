@@ -5,10 +5,9 @@ const jwt = require('jsonwebtoken');
 
 const secret = process.env.JWT_SECRET;
 if (!secret || secret.length < 16) {
-  console.error('JWT_SECRET is missing or too short. Set it in SOCKET_SERVER/.env (same value as HTTP_SERVER).');
+  console.error('JWT_SECRET is missing (same value as HTTP_SERVER).');
   process.exit(1);
 }
-
 const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173,http://127.0.0.1:5173')
   .split(',').map(s => s.trim()).filter(Boolean);
 
@@ -40,11 +39,8 @@ io.use((socket, next) => {
 io.on('connection', (socket) => {
   const { userId, role } = socket.data;
   console.log(`Client connected: ${socket.id} (user ${userId}, ${role})`);
-
-  // Private room per user: later used to push messages / notifications to one person.
   socket.join(`user:${userId}`);
   socket.emit('connected', { userId });
-
   socket.on('disconnect', () => {
     console.log(`Client disconnected: ${socket.id}`);
   });
