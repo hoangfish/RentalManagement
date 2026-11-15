@@ -1,8 +1,9 @@
-import { ROUTES } from '../../Common/constant.js';
+import { ROUTES, ROLES, homeRouteFor } from '../../Common/constant.js';
 
 // Counterpart of the StackView in main.qml: hash-based routing, e.g. index.html#/login
 //   guard 'guest' -> only for signed-out users (login / register)
 //   guard 'auth'  -> only for signed-in users
+//   guard 'tenant' / 'landlord' -> only for signed-in users with that role (others go to their own home)
 export class Router {
   #routes = new Map();
   #current = null;
@@ -52,9 +53,14 @@ export class Router {
     const route = this.#routes.get(path);
     if (!route) return this.#redirect(ROUTES.INTRO);
 
+    const user = this.ctx.userController.getUserModel();
     const loggedIn = this.ctx.userController.isLoggedIn();
-    if (route.guard === 'auth' && !loggedIn) return this.#redirect(ROUTES.LOGIN);
-    if (route.guard === 'guest' && loggedIn) return this.#redirect(ROUTES.HOME);
+    const needsLogin = ['auth', ROLES.TENANT, ROLES.LANDLORD].includes(route.guard);
+    if (needsLogin && !loggedIn) return this.#redirect(ROUTES.LOGIN);
+    if (route.guard === 'guest' && loggedIn) return this.#redirect(homeRouteFor(user.role));
+    if ([ROLES.TENANT, ROLES.LANDLORD].includes(route.guard) && user.role !== route.guard) {
+      return this.#redirect(homeRouteFor(user.role));
+    }
 
     this.#current?.destroy();
     this.previousPath = this.#currentPath;

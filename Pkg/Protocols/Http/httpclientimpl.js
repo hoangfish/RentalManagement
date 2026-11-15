@@ -1,6 +1,7 @@
 import { HttpClient } from './httpclient.js';
 
 const TIMEOUT_MS = 15000;
+const UPLOAD_TIMEOUT_MS = 120000; // photo uploads can be slow on mobile data
 
 export class HttpClientImpl extends HttpClient {
   static #instance = null;
@@ -17,23 +18,28 @@ export class HttpClientImpl extends HttpClient {
   sendGetRequest(url) { return this.#request('GET', url); }
   sendPostRequest(url, json = {}) { return this.#request('POST', url, json); }
   sendPutRequest(url, json = {}) { return this.#request('PUT', url, json); }
+  sendPatchRequest(url, json = {}) { return this.#request('PATCH', url, json); }
   sendDeleteRequest(url) { return this.#request('DELETE', url); }
 
-  // Always resolves with the server's JSON ({ success, message, data, ... }).
+  // File upload. The browser sets the multipart Content-Type (with its boundary) by itself.
+  sendFormRequest(method, url, formData) { return this.#request(method, url, formData, UPLOAD_TIMEOUT_MS); }
+
+  // Always resolves with the server's JSON ({ success, message, data, errors, ... }).
   // Network problems resolve with { success: false, networkError: true, message }.
-  async #request(method, url, body) {
+  async #request(method, url, body, timeoutMs = TIMEOUT_MS) {
+    const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
     const headers = { Accept: 'application/json' };
-    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json';
     const token = this.#tokenProvider();
     if (token) headers.Authorization = `Bearer ${token}`;
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const response = await fetch(url, {
         method,
         headers,
-        body: body !== undefined ? JSON.stringify(body) : undefined,
+        body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
         signal: controller.signal,
       });
       let data = null;

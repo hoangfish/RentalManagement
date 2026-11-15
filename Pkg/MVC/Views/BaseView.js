@@ -38,7 +38,7 @@ export class BaseView {
   clearFormErrors() {
     this.$$('.field').forEach((f) => {
       f.classList.remove('invalid');
-      f.querySelector('input')?.removeAttribute('aria-invalid');
+      f.querySelector('input, textarea')?.removeAttribute('aria-invalid');
       f.querySelector('.field-error').textContent = '';
     });
     const box = this.$('.form-error');
@@ -54,10 +54,10 @@ export class BaseView {
       const f = this.$(`.field[data-field="${name}"]`);
       if (!f) continue;
       f.classList.add('invalid');
-      f.querySelector('input').setAttribute('aria-invalid', 'true');
+      f.querySelector('input, textarea').setAttribute('aria-invalid', 'true');
       f.querySelector('.field-error').textContent = text;
       shownOnField = true;
-      focus ||= f.querySelector('input');
+      focus ||= f.querySelector('input, textarea');
     }
     if (!shownOnField) {
       const box = this.$('.form-error');
