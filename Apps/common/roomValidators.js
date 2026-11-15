@@ -9,8 +9,6 @@ const toInt = (v) => {
 };
 
 const toNumber = (v) => {
-    const s = String(v ?? '').trim().replace(',', '.');
-    return s !== '' && /^\d+(\.\d+)?$/.test(s) ? Number(s) : NaN;
 };
 
 function parseAmenities(raw, errors) {
