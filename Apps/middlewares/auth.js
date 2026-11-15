@@ -6,7 +6,6 @@ const { UserModel } = require('../models/UserModel');
 const getSecret = () => {
     const secret = process.env.JWT_SECRET;
     if (!secret || secret.length < 16) {
-        throw new Error('JWT_SECRET is missing or too short. Set it in HTTP_SERVER/.env');
     }
     return secret;
 };
@@ -20,7 +19,6 @@ const signToken = (user) =>
 const protect = asyncHandler(async (req, res, next) => {
     const header = req.headers.authorization || '';
     const token = header.startsWith('Bearer ') ? header.slice(7) : null;
-    if (!token) throw new AppError(401, 'Please sign in to continue');
 
     let payload;
     try {
